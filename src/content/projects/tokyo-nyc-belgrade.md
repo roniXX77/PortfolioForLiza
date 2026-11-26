@@ -5,8 +5,8 @@ category: photography
 order: 0.995
 demo: false
 description: A photography series by Liz Novikova.
-cover: ../../assets/tokyo-nyc-belgrade/06.jpg
-coverAlt: A seated Buddha statue beneath trees
+cover: ../../assets/tokyo-nyc-belgrade/04.jpg
+coverAlt: Two fish in a black-and-white mosaic
 media:
   - type: image
     src: ../../assets/tokyo-nyc-belgrade/01.jpg

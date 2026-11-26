@@ -146,8 +146,7 @@ nav [aria-current="page"] {
   padding-right: var(--gap);
 }
 .ribbon-item {
-  --ribbon-base-width: max(240px, 30vw);
-  width: var(--ribbon-base-width);
+  width: 30vw;
   min-width: 240px;
   display: block;
 }
@@ -165,10 +164,6 @@ nav [aria-current="page"] {
 }
 .ribbon-item-3 {
   width: 27vw;
-}
-.ribbon-item[href$="/projects/tokyo-nyc-belgrade/"] {
-  width: calc(var(--ribbon-base-width) * 849 / 856);
-  min-width: 0;
 }
 .ribbon-window::-webkit-scrollbar {
   display: none;
@@ -431,7 +426,7 @@ video {
     padding-bottom: 25px;
   }
   .ribbon-item {
-    --ribbon-base-width: max(240px, 65vw);
+    width: 65vw;
   }
   .ribbon-item-1 {
     width: 55vw;

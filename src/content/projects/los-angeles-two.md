@@ -5,8 +5,8 @@ category: photography
 order: 0.97
 demo: false
 description: A photography series by Liz Novikova.
-cover: ../../assets/los-angeles-two/03.jpg
-coverAlt: A blue chair beside a tree and a doorway
+cover: ../../assets/los-angeles-two/07.jpg
+coverAlt: People silhouetted in blue light on a street
 media:
   - type: image
     src: ../../assets/los-angeles-two/02.jpg

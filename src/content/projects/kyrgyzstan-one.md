@@ -5,8 +5,8 @@ category: photography
 order: 0.95
 demo: false
 description: A photography series by Liz Novikova.
-cover: ../../assets/kyrgyzstan-one/03.jpg
-coverAlt: A finger touching the nose of a sculpted bust
+cover: ../../assets/kyrgyzstan-one/06.jpg
+coverAlt: A statue holding a bowl beneath a patterned ceiling
 media:
   - type: image
     src: ../../assets/kyrgyzstan-one/01.jpg
