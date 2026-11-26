@@ -56,10 +56,9 @@ const work = projects
 </div>
 <p class="filter-status sr-only" aria-live="polite"></p>
 <div class="project-grid">
-  {work.map(({ project: p, index }) => (
+  {work.map(({ project: p }) => (
     <article
       data-category={p.data.category}
-      data-project-index={index}
       class:list={[
         "project-tile",
         { "matte-cover": p.data.slug === "space-noses-travel-agency" },
@@ -92,13 +91,7 @@ const work = projects
   const photographyIntro =
     document.querySelector<HTMLElement>(".photography-intro");
   const grid = document.querySelector(".project-grid");
-  const shuffledTiles = Array.from(
-    grid?.querySelectorAll<HTMLElement>("[data-project-index]") ?? [],
-  );
-  const categoryTiles = [...shuffledTiles].sort(
-    (a, b) => Number(a.dataset.projectIndex) - Number(b.dataset.projectIndex),
-  );
-  let showingAll = true;
+  const tiles = grid?.querySelectorAll<HTMLElement>(".project-tile") ?? [];
 
   function filter(category: string) {
     const valid = Array.from(buttons).some(
@@ -106,10 +99,6 @@ const work = projects
     );
     if (!valid) category = "all";
     const showAll = category === "all";
-    if (showingAll !== showAll) {
-      grid?.append(...(showAll ? shuffledTiles : categoryTiles));
-      showingAll = showAll;
-    }
     if (photographyIntro) photographyIntro.hidden = category !== "photography";
     grid?.classList.toggle("is-filtered", category !== "all");
     grid?.classList.toggle("hide-captions", category === "canvases");
@@ -122,7 +111,7 @@ const work = projects
       b.setAttribute("aria-pressed", String(b.dataset.filter === category)),
     );
     let count = 0;
-    for (const tile of shuffledTiles) {
+    for (const tile of tiles) {
       tile.hidden = !showAll && tile.dataset.category !== category;
       if (!tile.hidden) count++;
     }
@@ -147,7 +136,7 @@ const work = projects
 
 <style>
   .project-grid.compact-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: clamp(24px, 3vw, 48px);
   }
 
@@ -162,10 +151,6 @@ const work = projects
   }
 
   @media (max-width: 700px) {
-    .project-grid.compact-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .compact-grid .project-tile .project-image :global(img) {
       max-height: 52vw;
     }
