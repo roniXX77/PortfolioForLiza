@@ -60,16 +60,20 @@ const items = projects.map(({ data }) => ({
   </Fragment>
   <section class="hero">
     <div class="hero-signature">
-      <Image
-        src={portrait}
-        alt=""
-        width={240}
-        format="webp"
-        class="hero-portrait"
-      />
+      <a href={sitePath("/bio/")} aria-label="About Liz Novikova">
+        <Image
+          src={portrait}
+          alt=""
+          width={240}
+          format="webp"
+          class="hero-portrait"
+        />
+      </a>
       <div class="hero-wordmark">
-        <h1>liz novikova</h1>
-        <p class="hero-tagline">/go explore!</p>
+        <h1><a href={sitePath("/bio/")}>liz novikova</a></h1>
+        <p class="hero-tagline">
+          <a href={sitePath("/projects/")}>/go explore!</a>
+        </p>
       </div>
     </div>
   </section>

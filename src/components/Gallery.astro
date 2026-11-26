@@ -3,7 +3,19 @@ import { Image } from "astro:assets";
 import { archivePath, sitePath } from "../lib/navigation";
 import type { CollectionEntry } from "astro:content";
 const { projects } = Astro.props as { projects: CollectionEntry<"projects">[] };
-const work = projects.filter((p) => p.data.category !== "digital archive");
+function shuffleKey(slug: string) {
+  // Stable per-project key keeps the same shuffled order across visits and builds.
+  let hash = 2166136261;
+  for (const char of slug) {
+    hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  }
+  return hash >>> 0;
+}
+
+const work = projects
+  .filter((project) => project.data.category !== "digital archive")
+  .map((project, index) => ({ project, index, key: shuffleKey(project.data.slug) }))
+  .sort((a, b) => a.key - b.key || a.index - b.index);
 ---
 
 <div class="project-controls">
@@ -44,9 +56,10 @@ const work = projects.filter((p) => p.data.category !== "digital archive");
 </div>
 <p class="filter-status sr-only" aria-live="polite"></p>
 <div class="project-grid">
-  {work.map((p) => (
+  {work.map(({ project: p, index }) => (
     <article
       data-category={p.data.category}
+      data-project-index={index}
       class:list={[
         "project-tile",
         { "matte-cover": p.data.slug === "space-noses-travel-agency" },
@@ -78,33 +91,43 @@ const work = projects.filter((p) => p.data.category !== "digital archive");
   const buttons = document.querySelectorAll<HTMLButtonElement>("[data-filter]");
   const photographyIntro =
     document.querySelector<HTMLElement>(".photography-intro");
+  const grid = document.querySelector(".project-grid");
+  const shuffledTiles = Array.from(
+    grid?.querySelectorAll<HTMLElement>("[data-project-index]") ?? [],
+  );
+  const categoryTiles = [...shuffledTiles].sort(
+    (a, b) => Number(a.dataset.projectIndex) - Number(b.dataset.projectIndex),
+  );
+  let showingAll = true;
+
   function filter(category: string) {
     const valid = Array.from(buttons).some(
       (b) => b.dataset.filter === category,
     );
     if (!valid) category = "all";
+    const showAll = category === "all";
+    if (showingAll !== showAll) {
+      grid?.append(...(showAll ? shuffledTiles : categoryTiles));
+      showingAll = showAll;
+    }
     if (photographyIntro) photographyIntro.hidden = category !== "photography";
-    document
-      .querySelector(".project-grid")
-      ?.classList.toggle("is-filtered", category !== "all");
-    document
-      .querySelector(".project-grid")
-      ?.classList.toggle("hide-captions", category === "canvases");
-    document
-      .querySelector(".project-grid")
-      ?.classList.toggle("photography-grid", category === "photography");
+    grid?.classList.toggle("is-filtered", category !== "all");
+    grid?.classList.toggle("hide-captions", category === "canvases");
+    grid?.classList.toggle("photography-grid", category === "photography");
+    grid?.classList.toggle(
+      "compact-grid",
+      category === "video" || category === "participation" || category === "canvases",
+    );
     buttons.forEach((b) =>
       b.setAttribute("aria-pressed", String(b.dataset.filter === category)),
     );
     let count = 0;
-    document
-      .querySelectorAll<HTMLElement>("[data-category]")
-      .forEach((tile) => {
-        tile.hidden = category !== "all" && tile.dataset.category !== category;
-        if (!tile.hidden) count++;
-      });
+    for (const tile of shuffledTiles) {
+      tile.hidden = !showAll && tile.dataset.category !== category;
+      if (!tile.hidden) count++;
+    }
     const status = document.querySelector(".filter-status");
-    if (status) status.textContent = `${count} demo projects shown`;
+    if (status) status.textContent = `${count} projects shown`;
   }
   buttons.forEach((b) =>
     b.addEventListener("click", () => {
@@ -123,6 +146,31 @@ const work = projects.filter((p) => p.data.category !== "digital archive");
 </script>
 
 <style>
+  .project-grid.compact-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    row-gap: clamp(24px, 3vw, 48px);
+  }
+
+  .compact-grid .project-tile .project-image :global(img) {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: clamp(180px, 23vw, 350px);
+    aspect-ratio: auto;
+    object-fit: contain;
+    transform: none;
+  }
+
+  @media (max-width: 700px) {
+    .project-grid.compact-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .compact-grid .project-tile .project-image :global(img) {
+      max-height: 52vw;
+    }
+  }
+
   .project-grid.photography-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     row-gap: clamp(22px, 3vw, 48px);
