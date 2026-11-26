@@ -1,0 +1,99 @@
+---
+import { categories, archivePath, sitePath } from "../lib/navigation";
+const { pathname } = Astro.url;
+---
+
+<header class="site-header">
+  <a class="wordmark" href={sitePath("/")}>
+    home
+  </a>
+  <nav aria-label="main navigation">
+    <div class="projects-menu">
+      <div class="projects-menu-heading">
+        <a
+          href={sitePath("/projects/")}
+          aria-current={pathname.startsWith(sitePath("/projects/")) ? "page" : undefined}
+        >
+          /selected projects
+        </a>
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="project-submenu"
+          aria-label="toggle project categories"
+        >
+          <span aria-hidden="true">+</span>
+        </button>
+      </div>
+      <div class="project-submenu" id="project-submenu" hidden>
+        {categories.map((category) => (
+          <a href={sitePath(`/projects/?category=${category}`)}>/{category}</a>
+        ))}
+        <a class="archive-link" href={archivePath}>
+          /digital archive
+        </a>
+      </div>
+    </div>
+    <a
+      href={sitePath("/writings/")}
+      aria-current={pathname.startsWith(sitePath("/writings/")) ? "page" : undefined}
+    >
+      /writings
+    </a>
+    <a href={sitePath("/bio/")} aria-current={pathname === sitePath("/bio/") ? "page" : undefined}>
+      /bio & contact
+    </a>
+  </nav>
+</header>
+<script>
+  document.querySelectorAll<HTMLElement>(".projects-menu").forEach((menu) => {
+    const button = menu.querySelector<HTMLButtonElement>(".menu-toggle")!;
+    const submenu = menu.querySelector<HTMLElement>(".project-submenu")!;
+    let pinned = false;
+    let suppressed = false;
+    const show = (open: boolean) => {
+      submenu.hidden = !open;
+      button.setAttribute("aria-expanded", String(open));
+    };
+    menu.addEventListener("pointerenter", (e) => {
+      if (
+        e.pointerType === "mouse" &&
+        matchMedia("(hover: hover)").matches &&
+        !suppressed
+      )
+        show(true);
+    });
+    menu.addEventListener("pointerleave", () => {
+      suppressed = false;
+      if (!pinned && !menu.contains(document.activeElement)) show(false);
+    });
+    button.addEventListener("click", () => {
+      pinned = !pinned;
+      suppressed = !pinned;
+      show(pinned);
+    });
+    menu.addEventListener("focusout", () => {
+      requestAnimationFrame(() => {
+        if (!menu.contains(document.activeElement)) {
+          pinned = false;
+          show(false);
+        }
+      });
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !submenu.hidden) {
+        pinned = false;
+        suppressed = true;
+        show(false);
+        button.focus();
+      }
+    });
+    document.addEventListener("pointerdown", (e) => {
+      if (!menu.contains(e.target as Node)) {
+        pinned = false;
+        show(false);
+      }
+    });
+  });
+</script>

@@ -1,0 +1,70 @@
+---
+import { sitePath } from "../lib/navigation";
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import Ribbon from "../components/Ribbon.astro";
+import portrait from "../assets/liza-solo.png";
+
+// The homepage sequence is independent of the catalogue order.
+const ribbonOrder = [
+  "wishing-you-all-the-best",
+  "los-angeles-one",
+  "youth-in-two-parts",
+  "while-the-roses-are-blooming",
+  "little-sweet-diptych",
+  "different-cities-of-my-youth",
+  "moscow-novosibirsk",
+  "kyrgyzstan-three",
+  "kyrgyzstan-one",
+  "go-away",
+  "tokyo-nyc-belgrade",
+  "flowers-for-sale",
+  "in-search-of-volume",
+  "whats-the-catch",
+  "my-first-kiss-in-los-angeles",
+  "personal-public",
+  "los-angeles-two",
+  "indian-summer",
+  "gifted-horse",
+  "kyrgyzstan-two",
+  "kvartirnik",
+  "space-noses-travel-agency",
+];
+const ribbonPositions = new Map(
+  ribbonOrder.map((slug, index) => [slug, index]),
+);
+
+const projects = (await getCollection("projects"))
+  .filter((project) => project.data.category !== "digital archive")
+  .sort((a, b) => {
+    const aPosition = ribbonPositions.get(a.data.slug) ?? ribbonOrder.length;
+    const bPosition = ribbonPositions.get(b.data.slug) ?? ribbonOrder.length;
+    return aPosition - bPosition || a.data.order - b.data.order;
+  });
+const items = projects.map(({ data }) => ({
+  title: data.title,
+  href: sitePath(`/projects/${data.slug}/`),
+  cover: data.cover,
+  alt: data.coverAlt,
+}));
+---
+
+<Layout>
+  <section class="hero">
+    <div class="hero-signature">
+      <Image
+        src={portrait}
+        alt=""
+        width={240}
+        format="webp"
+        class="hero-portrait"
+      />
+      <div class="hero-wordmark">
+        <h1>liz novikova</h1>
+        <p class="hero-tagline">/go explore!</p>
+      </div>
+    </div>
+  </section>
+  <Ribbon items={items} />
+</Layout>

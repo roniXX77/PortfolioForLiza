@@ -1,0 +1,99 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+interface Props {
+  items: { title: string; href: string; cover: ImageMetadata; alt: string }[];
+}
+const { items } = Astro.props;
+---
+
+<section class="ribbon" aria-label="project previews">
+  <div
+    class="ribbon-window"
+    tabindex="0"
+    role="group"
+    aria-label="scroll project previews"
+  >
+    <div class="ribbon-track">
+      {[0, 1].map((copy) => (
+        <div class="ribbon-group" aria-hidden={copy === 1 ? "true" : undefined}>
+          {items.map((item, i) => (
+            <a
+              class:list={["ribbon-item", `ribbon-item-${i % 4}`]}
+              href={item.href}
+              aria-label={item.title}
+              tabindex={copy === 1 ? -1 : undefined}
+            >
+              <Image
+                src={item.cover}
+                alt={copy === 1 ? "" : item.alt}
+                widths={[320, 480, 720]}
+                sizes="(max-width: 600px) 64vw, 32vw"
+                width={720}
+                format="webp"
+                loading={copy === 0 && i < 3 ? "eager" : "lazy"}
+              />
+            </a>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+<script>
+  document.querySelectorAll<HTMLElement>(".ribbon").forEach((ribbon) => {
+    const viewport = ribbon.querySelector<HTMLElement>(".ribbon-window")!;
+    const track = ribbon.querySelector<HTMLElement>(".ribbon-track")!;
+    const group = track.querySelector<HTMLElement>(".ribbon-group")!;
+
+    function shift(distance: number) {
+      const animation = track.getAnimations()[0];
+      const duration = animation?.effect?.getComputedTiming().duration;
+      const width = group.getBoundingClientRect().width;
+      if (!animation || typeof duration !== "number" || !width) return false;
+
+      const time =
+        Number(animation.currentTime ?? 0) + (distance * duration) / width;
+      animation.currentTime = ((time % duration) + duration) % duration;
+      return true;
+    }
+
+    viewport.addEventListener(
+      "wheel",
+      (event) => {
+        const distance =
+          event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX;
+        if (
+          !distance ||
+          (!event.shiftKey && Math.abs(distance) <= Math.abs(event.deltaY))
+        )
+          return;
+        const multiplier =
+          event.deltaMode === 1
+            ? 16
+            : event.deltaMode === 2
+              ? viewport.clientWidth
+              : 1;
+        if (event.cancelable && shift(distance * multiplier))
+          event.preventDefault();
+      },
+      { passive: false },
+    );
+
+    viewport.addEventListener(
+      "scroll",
+      () => {
+        if (viewport.scrollLeft && shift(viewport.scrollLeft))
+          viewport.scrollLeft = 0;
+      },
+      { passive: true },
+    );
+    ribbon.addEventListener("pointerenter", (event) => {
+      if (event.pointerType === "mouse")
+        track.getAnimations()[0]?.updatePlaybackRate(0.9);
+    });
+    ribbon.addEventListener("pointerleave", () =>
+      track.getAnimations()[0]?.updatePlaybackRate(1),
+    );
+  });
+</script>

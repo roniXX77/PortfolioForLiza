@@ -1,0 +1,15 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Gallery from "../../components/Gallery.astro";
+import { getCollection } from "astro:content";
+const projects = (await getCollection("projects")).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+---
+
+<Layout title="selected projects — liz novikova">
+  <section class="page-intro">
+    <h1>/selected projects</h1>
+  </section>
+  <Gallery projects={projects} />
+</Layout>

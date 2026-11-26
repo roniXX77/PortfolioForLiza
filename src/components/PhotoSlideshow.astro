@@ -1,0 +1,315 @@
+---
+import { sitePath } from "../lib/navigation";
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
+const {
+  photos,
+  intro,
+  credit,
+  showCaption = !intro,
+  label = "Exhibition photographs",
+} = Astro.props as {
+  photos: {
+    src: ImageMetadata;
+    alt: string;
+    brightness?: number;
+    fit?: "cover" | "contain";
+  }[];
+  intro?: { src: string; poster: ImageMetadata; alt: string };
+  credit?: string;
+  showCaption?: boolean;
+  label?: string;
+};
+const sizes = "(max-width: 760px) 94vw, (max-width: 1650px) 52vw, 900px";
+const frames = intro
+  ? [{ src: intro.poster, alt: intro.alt, fit: "contain" as const }, ...photos]
+  : photos;
+const slides = await Promise.all(
+  frames.map(async (photo) => {
+    const widths = [
+      ...new Set(
+        [640, 960, 1400].map((width) => Math.min(width, photo.src.width)),
+      ),
+    ];
+    const images = await Promise.all(
+      widths.map((width) =>
+        getImage({ src: photo.src, width, format: "webp" }),
+      ),
+    );
+    const image = images[images.length - 1];
+    const srcset = images
+      .map((variant, index) => `${variant.src} ${widths[index]}w`)
+      .join(", ");
+    return {
+      src: image.src,
+      srcset,
+      alt: photo.alt,
+      brightness: photo.brightness ?? 1,
+      fit: photo.fit ?? "cover",
+    };
+  }),
+);
+---
+
+<figure
+  class="photo-show"
+  aria-label={label}
+  data-slides={JSON.stringify(slides)}
+>
+  <div class:list={["stage", { "stage--wide": intro }]}>
+    <img
+      class="slide"
+      src={slides[0].src}
+      srcset={slides[0].srcset}
+      sizes={sizes}
+      width="1400"
+      height="1050"
+      alt={slides[0].alt}
+      decoding="async"
+      style={`--slide-brightness: ${slides[0].brightness}; --slide-fit: ${slides[0].fit}`}
+    />
+    {intro && (
+      <video
+        class="intro"
+        src={sitePath(intro.src)}
+        playsinline
+        muted
+        preload="metadata"
+        aria-label={intro.alt}
+        hidden
+      ></video>
+    )}
+    <button
+      type="button"
+      class="hit previous"
+      aria-label="Previous photo"
+    ></button>
+    <button type="button" class="hit next" aria-label="Next photo"></button>
+  </div>
+  {showCaption && (
+    <figcaption>
+      {credit && <span>Photo credit: {credit}</span>}
+      <span class="count">1 / {photos.length}</span>
+    </figcaption>
+  )}
+</figure>
+
+<style>
+  .photo-show {
+    width: 100%;
+    max-width: 900px;
+    margin-inline: auto;
+  }
+  .stage {
+    position: relative;
+    overflow: hidden;
+    touch-action: pan-y pinch-zoom;
+    aspect-ratio: 4/3;
+    background: #eeedf0;
+  }
+  .stage .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: var(--slide-fit, cover);
+    background: transparent;
+    filter: brightness(var(--slide-brightness, 1));
+  }
+  .stage--wide {
+    aspect-ratio: 16/9;
+    background: var(--bg);
+  }
+  .stage .intro {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: contain;
+    background: var(--bg);
+  }
+  .stage .intro[hidden] {
+    display: none;
+  }
+  .hit {
+    position: absolute;
+    inset-block: 0;
+    width: 50%;
+    cursor: pointer;
+  }
+  .count {
+    margin-inline-start: auto;
+  }
+  .hit:focus-visible {
+    outline-offset: -4px;
+  }
+  .previous {
+    left: 0;
+  }
+  .next {
+    right: 0;
+  }
+  figcaption {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+</style>
+
+<script>
+  for (const show of document.querySelectorAll<HTMLElement>(".photo-show")) {
+    const slides: {
+      src: string;
+      srcset: string;
+      alt: string;
+      brightness: number;
+      fit: "cover" | "contain";
+    }[] = JSON.parse(show.dataset.slides!);
+    const image = show.querySelector<HTMLImageElement>(".slide")!;
+    function preload(index: number) {
+      const photo = new Image();
+      const slide = slides[(index + slides.length) % slides.length];
+      photo.sizes = image.sizes;
+      photo.srcset = slide.srcset;
+      photo.src = slide.src;
+    }
+    const count = show.querySelector(".count");
+    const intro = show.querySelector<HTMLVideoElement>(".intro");
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const stage = show.querySelector<HTMLElement>(".stage")!;
+    let current = 0;
+    let timer: number;
+    let moving = false;
+    let touchStart: { x: number; y: number } | undefined;
+
+    function resetTimer() {
+      window.clearTimeout(timer);
+      if (
+        !reducedMotion.matches &&
+        !document.hidden &&
+        !(intro && current === 0)
+      ) {
+        timer = window.setTimeout(() => void move(1), 5000);
+      }
+    }
+
+    function startIntro() {
+      if (!intro || current !== 0 || reducedMotion.matches) return;
+      intro.currentTime = 0;
+      intro.hidden = false;
+      void intro.play().catch(() => {
+        if (current === 0 && !moving && !intro.hidden) void move(1);
+      });
+    }
+
+    async function move(direction: number) {
+      if (moving) {
+        resetTimer();
+        return;
+      }
+      moving = true;
+      resetTimer();
+      if (intro && current === 0) {
+        intro.hidden = true;
+        intro.pause();
+      }
+      try {
+        const next = (current + direction + slides.length) % slides.length;
+        const incoming = new Image();
+        incoming.sizes = image.sizes;
+        incoming.srcset = slides[next].srcset;
+        incoming.src = slides[next].src;
+        await incoming.decode();
+        if (!reducedMotion.matches) {
+          await image.animate(
+            [
+              { transform: "none" },
+              { transform: `translateX(${direction * -100}%)` },
+            ],
+            { duration: 300, easing: "ease-in", fill: "forwards" },
+          ).finished;
+        }
+        current = next;
+        image.srcset = slides[current].srcset;
+        image.src = slides[current].src;
+        image.alt = slides[current].alt;
+        image.style.setProperty("--slide-fit", slides[current].fit);
+        image.style.setProperty(
+          "--slide-brightness",
+          String(slides[current].brightness),
+        );
+        for (const animation of image.getAnimations()) animation.cancel();
+        if (!reducedMotion.matches) {
+          await image.animate(
+            [
+              { transform: `translateX(${direction * 100}%)` },
+              { transform: "none" },
+            ],
+            { duration: 300, easing: "ease-out" },
+          ).finished;
+        }
+        if (count) count.textContent = `${current + 1} / ${slides.length}`;
+        preload(current + 1);
+        preload(current - 1);
+      } catch {
+        for (const animation of image.getAnimations()) animation.cancel();
+      } finally {
+        moving = false;
+        startIntro();
+        resetTimer();
+      }
+    }
+
+    show
+      .querySelector(".previous")
+      ?.addEventListener("click", () => void move(-1));
+    show.querySelector(".next")?.addEventListener("click", () => void move(1));
+    show.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      void move(event.key === "ArrowLeft" ? -1 : 1);
+    });
+    stage.addEventListener(
+      "touchstart",
+      (event) => {
+        const touch = event.touches[0];
+        touchStart =
+          event.touches.length === 1
+            ? { x: touch.clientX, y: touch.clientY }
+            : undefined;
+      },
+      { passive: true },
+    );
+    stage.addEventListener("touchend", (event) => {
+      if (!touchStart) return;
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - touchStart.x;
+      const dy = touch.clientY - touchStart.y;
+      touchStart = undefined;
+      if (Math.abs(dx) < 35 || Math.abs(dx) <= Math.abs(dy)) return;
+      if (event.cancelable) event.preventDefault();
+      void move(dx < 0 ? 1 : -1);
+    });
+    stage.addEventListener("touchcancel", () => {
+      touchStart = undefined;
+    });
+    preload(1);
+    preload(-1);
+    intro?.addEventListener("ended", () => {
+      if (current === 0 && !moving) void move(1);
+    });
+    startIntro();
+    reducedMotion.addEventListener("change", () => {
+      if (intro && reducedMotion.matches) {
+        intro.hidden = true;
+        intro.pause();
+      } else if (!moving) {
+        startIntro();
+      }
+      resetTimer();
+    });
+    document.addEventListener("visibilitychange", resetTimer);
+    resetTimer();
+  }
+</script>

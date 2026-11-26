@@ -1,0 +1,81 @@
+---
+import { sitePath } from "../../lib/navigation";
+import Layout from "../../layouts/Layout.astro";
+import { published, selected } from "../../lib/writings";
+
+const sections = [
+  { id: "published", title: "Published", entries: published },
+  { id: "essays", title: "Selected essays", entries: selected },
+];
+---
+
+<Layout title="writings — liz novikova">
+  <section class="page-intro">
+    <h1>/writings</h1>
+  </section>
+  <div class="writings">
+    {sections.map((section) => (
+      <section aria-labelledby={section.id}>
+        <h2 id={section.id}>{section.title}</h2>
+        <ul class="writing-list">
+          {section.entries.map((entry) => (
+            <li>
+              <a
+                class="writing-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                href={entry.url ?? sitePath(`/writings/${entry.id}/`)}
+              >
+                {entry.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Layout>
+
+<style>
+  .writings {
+    margin: 0 var(--gutter) clamp(54px, 7vw, 104px);
+    display: grid;
+    gap: clamp(42px, 5vw, 72px);
+  }
+
+  h2 {
+    font-size: clamp(19px, 2vw, 27px);
+    margin: 0 0 16px;
+  }
+
+  .writing-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  }
+
+  .writing-list li {
+    border-top: 1px solid color-mix(in srgb, var(--ink) 65%, #fff);
+  }
+
+  .writing-link {
+    display: block;
+    padding: clamp(16px, 2vw, 28px) clamp(14px, 3vw, 48px);
+    color: #fff;
+    background: color-mix(in srgb, var(--ink) 65%, #000);
+    font-size: clamp(18px, 1.85vw, 28px);
+    letter-spacing: -0.035em;
+    line-height: 1.17;
+    text-wrap: pretty;
+  }
+
+  .writing-link:hover {
+    text-decoration: none;
+    background: color-mix(in srgb, var(--ink) 55%, #000);
+  }
+
+  :global(main:has(.writings) + footer) {
+    border-top: 0;
+  }
+</style>

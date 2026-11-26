@@ -1,0 +1,69 @@
+---
+import { sitePath } from "../../lib/navigation";
+import Layout from "../../layouts/Layout.astro";
+import { selected } from "../../lib/writings";
+
+export function getStaticPaths() {
+  const essays = import.meta.glob<string>("../../content/writings/*.html", {
+    eager: true,
+    query: "?raw",
+    import: "default",
+  });
+  return selected.flatMap((entry) => {
+    const body = essays[`../../content/writings/${entry.id}.html`];
+    return body ? [{ params: { slug: entry.id }, props: { entry, body } }] : [];
+  });
+}
+
+const { entry, body } = Astro.props;
+---
+
+<Layout title={`${entry.title} — liz novikova`}>
+  <article class="essay">
+    <a href={sitePath("/writings/")}>/back to writings</a>
+    <h1>{entry.title}</h1>
+    <div class="essay-body">
+      <Fragment set:html={body} />
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .essay {
+    margin: 28px var(--gutter) 64px;
+    max-width: 1120px;
+  }
+  h1 {
+    margin: 20px 0 8px;
+    font-size: clamp(28px, 5vw, 52px);
+    line-height: 1.06;
+    max-width: 900px;
+  }
+  .essay-body {
+    max-width: 720px;
+    margin-top: 26px;
+    font-size: 16px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+  }
+  .essay-body :global(p),
+  .essay-body :global(blockquote) {
+    margin: 0 0 1em;
+  }
+  .essay-body :global(.epigraph) {
+    width: min(100%, 48ch);
+    margin: 0 0 1.25em auto;
+    text-align: right;
+  }
+  .essay-body :global(.epigraph p) {
+    margin-bottom: 0;
+  }
+  .essay-body :global(.epigraph-author) {
+    margin-top: 0.25em;
+  }
+  .essay-body :global(a),
+  a:hover,
+  a:focus-visible {
+    text-decoration: underline;
+  }
+</style>

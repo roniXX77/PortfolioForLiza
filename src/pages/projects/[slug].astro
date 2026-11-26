@@ -1,0 +1,263 @@
+---
+import { sitePath } from "../../lib/navigation";
+import { getCollection, render } from "astro:content";
+import { Image } from "astro:assets";
+import Layout from "../../layouts/Layout.astro";
+import PhotoGallery from "../../components/PhotoGallery.astro";
+import PhotoSlideshow from "../../components/PhotoSlideshow.astro";
+import VideoPlayer from "../../components/VideoPlayer.astro";
+export async function getStaticPaths() {
+  return (await getCollection("projects")).map((project) => ({
+    params: { slug: project.data.slug },
+    props: { project },
+  }));
+}
+const { project } = Astro.props;
+const p = project.data;
+const isPhotoSeries = p.category === "photography";
+const hasCategoryFilter = p.category !== "digital archive";
+const exploreHref = hasCategoryFilter
+  ? sitePath(`/projects/?category=${p.category}`)
+  : sitePath("/projects/");
+const exploreLabel = hasCategoryFilter ? p.category : "projects";
+const photos = p.media.filter((media) => media.type === "image");
+const firstMedia = p.media[0];
+const intro =
+  p.category === "video" &&
+  firstMedia?.type === "video" &&
+  photos.length === p.media.length - 1
+    ? firstMedia
+    : undefined;
+const useSlideshow =
+  (p.category === "video" ||
+    p.category === "canvases" ||
+    (p.category === "participation" && Boolean(p.photoCredit))) &&
+  photos.length > 1 &&
+  (Boolean(intro) || photos.length === p.media.length);
+const canvasPhoto =
+  p.category === "canvases" && p.media.length === 1 ? photos[0] : undefined;
+const usePhotoPanel = useSlideshow || Boolean(canvasPhoto);
+const video =
+  p.category === "video" &&
+  p.media.length === 1 &&
+  p.media[0]?.type === "video" &&
+  project.body?.trim()
+    ? p.media[0]
+    : undefined;
+const Content = video ? (await render(project)).Content : undefined;
+const paragraphs = p.description.split("\n\n");
+---
+
+<Layout title={`${p.title} — liz novikova`} description={p.description}>
+  <section class="project-intro">
+    <a href={sitePath("/projects/")}>/back to all projects</a>
+    <div class="detail-heading">
+      <div>
+        <h1>
+          {p.titleUrl ? (
+            <a href={p.titleUrl}>{p.title}</a>
+          ) : (
+            `${p.category === "digital archive" ? "/" : ""}${p.title}`
+          )}
+        </h1>
+        {p.demo && !isPhotoSeries && (
+          <small class="sample-label">sample project</small>
+        )}
+      </div>
+      {p.category !== "digital archive" && (
+        <span>
+          /{p.category}
+          {!isPhotoSeries && p.year !== undefined && (
+            <>
+              <br />
+              {p.year}
+            </>
+          )}
+        </span>
+      )}
+    </div>
+    {p.externalUrl ? (
+      <div class="archive-layout">
+        <div class="project-description">
+          {paragraphs.map((paragraph) => (
+            <p>{paragraph}</p>
+          ))}
+        </div>
+        <div class="archive-visit">
+          <a
+            class="archive-thumbnail"
+            href={p.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open Lichnoye Publichnoye"
+          >
+            <Image
+              src={p.cover}
+              alt={p.coverAlt}
+              widths={[480, 800, 1200]}
+              sizes="(max-width: 760px) 94vw, 44vw"
+              width={1200}
+              format="webp"
+            />
+          </a>
+          <a href={p.externalUrl} target="_blank" rel="noopener noreferrer">
+            /visit lichnoye publichnoye
+          </a>
+        </div>
+      </div>
+    ) : (
+      !isPhotoSeries &&
+      !usePhotoPanel &&
+      !video && (
+        <div class="project-description">
+          {paragraphs.map((paragraph) => (
+            <p>{paragraph}</p>
+          ))}
+        </div>
+      )
+    )}
+  </section>
+  <div
+    class:list={[
+      "project-media",
+      {
+        "project-media--split": usePhotoPanel || Boolean(video),
+        "project-media--portrait": p.slug === "wishing-you-all-the-best",
+      },
+    ]}
+  >
+    {video && Content ? (
+      <>
+        <VideoPlayer
+          {...video}
+          preserveAspectRatio
+          minimalControls={[
+            "indian-summer",
+            "wishing-you-all-the-best",
+            "personal-public",
+          ].includes(p.slug)}
+        />
+        <div class="project-description">
+          <Content />
+        </div>
+      </>
+    ) : usePhotoPanel ? (
+      <>
+        {canvasPhoto ? (
+          <Image
+            src={canvasPhoto.src}
+            alt={canvasPhoto.alt}
+            widths={[480, 800, 1200, canvasPhoto.src.width]}
+            sizes="(max-width: 760px) 94vw, 52vw"
+            width={canvasPhoto.src.width}
+            format="webp"
+          />
+        ) : (
+          <PhotoSlideshow
+            photos={photos}
+            intro={intro}
+            credit={p.photoCredit}
+            showCaption={!intro && p.category !== "canvases"}
+            label={
+              p.category === "video"
+                ? "Film stills"
+                : p.category === "canvases"
+                  ? p.title
+                  : undefined
+            }
+          />
+        )}
+        <div class="project-description">
+          {paragraphs.map((paragraph, index) => (
+            <>
+              {index === 1 && p.sectionHeading && (
+                <h2>
+                  <a href={p.sectionHeading.url}>{p.sectionHeading.title}</a>
+                </h2>
+              )}
+              <p>{paragraph}</p>
+            </>
+          ))}
+        </div>
+      </>
+    ) : isPhotoSeries ? (
+      <PhotoGallery photos={photos} />
+    ) : (
+      p.media.map((media) =>
+        media.type === "image" ? (
+          <figure>
+            <Image
+              src={media.src}
+              alt={media.alt}
+              widths={[480, 800, 1280, 1800]}
+              sizes="(max-width: 700px) 92vw, 90vw"
+              width={1800}
+              format="webp"
+              loading="lazy"
+            />
+            <figcaption>{media.alt}</figcaption>
+          </figure>
+        ) : (
+          <VideoPlayer {...media} />
+        ),
+      )
+    )}
+  </div>
+  <a class="back-bottom" href={exploreHref}>
+    /explore more {exploreLabel}
+  </a>
+</Layout>
+
+<style>
+  .archive-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(24px, 4vw, 64px);
+    margin-top: 20px;
+  }
+  .archive-layout .project-description {
+    margin-top: 0;
+  }
+  .archive-visit .archive-thumbnail {
+    display: block;
+    margin-top: 0;
+  }
+  .archive-visit img {
+    width: 100%;
+    height: auto;
+  }
+  @media (max-width: 760px) {
+    .archive-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  h1 a,
+  .project-description h2 a {
+    text-decoration: underline;
+    text-decoration-thickness: 0.055em;
+    text-underline-offset: 0.12em;
+  }
+  .project-description h2 {
+    font-size: 1em;
+    margin-block: 0.9em 0.35em;
+  }
+  .project-media--split {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    align-items: start;
+    gap: clamp(24px, 4vw, 64px);
+  }
+  .project-media--portrait > :global(.video-player) {
+    width: min(100%, calc(85vh * 3 / 4));
+    justify-self: center;
+  }
+  .project-media--split .project-description {
+    margin-top: 0;
+  }
+  @media (max-width: 760px) {
+    .project-media--split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,127 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../layouts/Layout.astro";
+import portrait from "../assets/liz-bio.png";
+---
+
+<Layout title="bio & contact — liz novikova">
+  <section class="page-intro">
+    <h1>/bio &amp; contact</h1>
+  </section>
+  <section class="bio-grid">
+    <figure>
+      <Image
+        src={portrait}
+        alt="Four passport portraits of Liz Novikova"
+        widths={[320, 640, 960]}
+        sizes="(max-width: 760px) 86vw, (max-width: 1400px) 34vw, 480px"
+        width={960}
+        format="webp"
+      />
+    </figure>
+    <div class="contact-block">
+      <h2>/contact</h2>
+      <ul>
+        <li>
+          <a href="mailto:novikovaliza262@gmail.com">
+            novikovaliza262@gmail.com
+          </a>
+        </li>
+        <li>
+          <a href="https://www.linkedin.com/in/liz-novikova/">LinkedIn</a>
+        </li>
+        <li>
+          <a href="https://www.instagram.com/lliza12345678/">Instagram</a>
+        </li>
+      </ul>
+    </div>
+    <div class="bio-text">
+      <p>
+        Liz Novikova is an artist, filmmaker and researcher based in Los
+        Angeles. Working across moving image, performance, photography and
+        writing, she examines how urban space organizes perception and bodily
+        behavior. Repetition and displacement are recurring methods in her work:
+        an ordinary gesture becomes strange when it is performed elsewhere or
+        once too often. She uses kitsch and irony to test the distance between a
+        city’s image of itself and the life that unfolds on its streets.
+      </p>
+      <p>
+        After moving to Los Angeles, Novikova returned to Moscow in a foil hat
+        and glittering pink and purple clothes, asking passersby whether she
+        looked like a tourist. She calls this practice of taking the city’s
+        visual codes onto her own body “wearing the city.” Her research on
+        experimental film and artist-run spaces in Southern California likewise
+        attends to the conditions in which art is encountered, from the site of
+        a screening to the social arrangements around it.
+      </p>
+      <p>
+        Novikova is senior editor at ST.ART and works in gallery education at
+        the Hammer Museum. Both are sites for her ongoing interest in how a
+        work’s meaning changes through public interpretation.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .bio-grid {
+    grid-template-areas: "portrait text" "contact text";
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    row-gap: 24px;
+  }
+
+  figure {
+    grid-area: portrait;
+  }
+  .bio-text {
+    grid-area: text;
+  }
+  .bio-grid .contact-block {
+    grid-area: contact;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+  .contact-block h2 {
+    margin-bottom: 12px;
+  }
+
+  @media (min-width: 1100px) {
+    .bio-grid {
+      grid-template-columns: minmax(260px, 360px) minmax(0, 540px) minmax(
+          215px,
+          1fr
+        );
+      grid-template-areas: "portrait text contact";
+      grid-template-rows: auto;
+      column-gap: clamp(32px, 4.5vw, 72px);
+    }
+  }
+
+  @media (max-width: 700px) {
+    .bio-grid {
+      grid-template-areas: "portrait" "contact" "text";
+      grid-template-rows: auto;
+    }
+    .bio-grid figure {
+      width: min(72vw, 260px);
+    }
+  }
+
+  .bio-grid p + p {
+    margin-top: 1em;
+  }
+  .contact-block ul {
+    display: grid;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .contact-block a {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+</style>

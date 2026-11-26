@@ -1,0 +1,34 @@
+---
+import { sitePath } from "../lib/navigation";
+import Menu from "../components/Menu.astro";
+import "../styles/global.css";
+const {
+  title = "liz novikova portfolio",
+  description = "Selected projects across video, photography, participation and canvases.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#fafafa" />
+    <title>{title}</title>
+    <link rel="icon" href={sitePath("/favicon.svg")} type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      /skip to content
+    </a>
+    <Menu />
+    <main id="main">
+      <slot />
+    </main>
+    <footer>
+      <a href={sitePath("/")}>liz novikova</a>
+      <a href={sitePath("/bio/")}>/get in touch</a>
+    </footer>
+  </body>
+</html>

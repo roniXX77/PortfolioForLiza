@@ -1,0 +1,112 @@
+---
+import { sitePath } from "../lib/navigation";
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
+const { src, poster, alt, captions, preserveAspectRatio, minimalControls } =
+  Astro.props as {
+    src: string;
+    poster: ImageMetadata;
+    alt: string;
+    captions?: string;
+    preserveAspectRatio?: boolean;
+    minimalControls?: boolean;
+  };
+const VideoSurface = minimalControls ? "button" : "div";
+const optimized = await getImage({
+  src: poster,
+  width: preserveAspectRatio ? poster.width : 1280,
+  height: preserveAspectRatio ? poster.height : 854,
+  fit: "cover",
+  format: "webp",
+});
+---
+
+<figure class="video-player">
+  <VideoSurface
+    type={minimalControls ? "button" : undefined}
+    class={minimalControls ? "video-surface" : undefined}
+    aria-label={minimalControls ? `Play ${alt}` : undefined}
+  >
+    <video
+      controls={!minimalControls}
+      muted={minimalControls}
+      data-autoplay={minimalControls ? "" : undefined}
+      playsinline
+      preload="none"
+      poster={optimized.src}
+      aria-label={alt}
+      width={preserveAspectRatio ? poster.width : 960}
+      height={preserveAspectRatio ? poster.height : 640}
+    >
+      <source src={sitePath(src)} type="video/mp4" />
+      {captions && (
+        <track
+          kind="captions"
+          src={sitePath(captions)}
+          srclang="en"
+          label="english"
+          default
+        />
+      )}
+      Your browser does not support HTML video.
+    </video>
+  </VideoSurface>
+  <p class="video-error" role="status" hidden>
+    video could not be loaded. please try again later.
+  </p>
+  {!minimalControls && <figcaption>{alt}</figcaption>}
+</figure>
+<script>
+  const videos = document.querySelectorAll<HTMLVideoElement>("video");
+  videos.forEach((video) => {
+    video.addEventListener("play", () => {
+      videos.forEach((other) => {
+        if (other !== video) other.pause();
+      });
+    });
+
+    const showError = () => {
+      const message = video
+        .closest(".video-player")
+        ?.querySelector<HTMLElement>(".video-error");
+      if (message) message.hidden = false;
+    };
+    video.addEventListener("error", showError);
+    video.querySelector("source")?.addEventListener("error", showError);
+  });
+
+  document
+    .querySelectorAll<HTMLVideoElement>("video[data-autoplay]")
+    .forEach((video) => {
+      const button = video.closest<HTMLButtonElement>(".video-surface");
+      if (!button) return;
+
+      const play = () => video.play().catch(() => {});
+      const sync = () => {
+        const action = video.paused || video.ended ? "Play" : "Pause";
+        button.setAttribute(
+          "aria-label",
+          `${action} ${video.getAttribute("aria-label")}`,
+        );
+      };
+
+      button.addEventListener("click", () => {
+        if (video.paused || video.ended) void play();
+        else video.pause();
+      });
+      ["play", "pause", "ended"].forEach((event) =>
+        video.addEventListener(event, sync),
+      );
+
+      video.muted = true;
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        void play();
+    });
+</script>
+
+<style>
+  .video-surface {
+    display: block;
+    width: 100%;
+  }
+</style>
