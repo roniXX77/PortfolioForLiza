@@ -102,6 +102,7 @@ const work = projects
     if (photographyIntro) photographyIntro.hidden = category !== "photography";
     grid?.classList.toggle("is-filtered", category !== "all");
     grid?.classList.toggle("hide-captions", category === "canvases");
+    grid?.classList.toggle("participation-grid", category === "participation");
     grid?.classList.toggle("photography-grid", category === "photography");
     grid?.classList.toggle(
       "compact-grid",
@@ -154,6 +155,16 @@ const work = projects
     .compact-grid .project-tile .project-image :global(img) {
       max-height: 52vw;
     }
+  }
+
+  .project-grid.participation-grid {
+    column-gap: clamp(10px, 1.5vw, 24px);
+    padding-inline: calc(var(--gutter) * 0.65);
+  }
+
+  .participation-grid .project-tile .project-image :global(img) {
+    width: 100%;
+    max-height: none;
   }
 
   .project-grid.photography-grid {
