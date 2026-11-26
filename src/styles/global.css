@@ -519,18 +519,19 @@ video {
   html {
     scroll-behavior: auto;
   }
+  .project-image img {
+    transition: none;
+  }
+}
+
+/* A touch-first device uses the browser's horizontal scrolling and inertia. */
+@media (hover: none) and (pointer: coarse), (prefers-reduced-motion: reduce) {
   .ribbon-track {
     animation: none;
     will-change: auto;
   }
-  .ribbon-window {
-    overflow-x: auto;
-  }
   .ribbon-group[aria-hidden="true"] {
     display: none;
-  }
-  .project-image img {
-    transition: none;
   }
 }
 
