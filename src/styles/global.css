@@ -171,6 +171,12 @@ nav [aria-current="page"] {
 .ribbon-window::-webkit-scrollbar {
   display: none;
 }
+@media (prefers-reduced-motion: no-preference) {
+  .ribbon-window {
+    touch-action: pan-y pinch-zoom;
+  }
+}
+.ribbon.is-touching .ribbon-track,
 .ribbon:has(:focus-visible) .ribbon-track {
   animation-play-state: paused;
 }
