@@ -51,6 +51,13 @@ const items = projects.map(({ data }) => ({
 ---
 
 <Layout>
+  <Fragment slot="head">
+    <meta property="og:title" content="liz novikova portfolio" />
+    <meta property="og:description" content="Selected projects, publications, and contact." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://liznovikova.art/" />
+    <meta property="og:image" content="https://liznovikova.art/social-preview.jpg" />
+  </Fragment>
   <section class="hero">
     <div class="hero-signature">
       <Image
