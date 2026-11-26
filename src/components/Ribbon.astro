@@ -58,68 +58,6 @@ const { items } = Astro.props;
       return true;
     }
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let touch: {
-      id: number;
-      startX: number;
-      startY: number;
-      previousX: number;
-      dragging: boolean;
-    } | undefined;
-    let suppressClick = false;
-
-    viewport.addEventListener("pointerdown", (event) => {
-      if (!event.isPrimary) return;
-      suppressClick = false;
-      if (event.pointerType === "mouse" || reducedMotion.matches) return;
-
-      touch = {
-        id: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        previousX: event.clientX,
-        dragging: false,
-      };
-      ribbon.classList.add("is-touching");
-    });
-
-    function endTouch() {
-      touch = undefined;
-      ribbon.classList.remove("is-touching");
-    }
-
-    viewport.addEventListener("pointermove", (event) => {
-      if (!touch || event.pointerId !== touch.id) return;
-      if (!touch.dragging) {
-        const horizontal = Math.abs(event.clientX - touch.startX);
-        const vertical = Math.abs(event.clientY - touch.startY);
-        if (vertical >= 8 && vertical > horizontal) {
-          endTouch();
-          return;
-        }
-        if (horizontal < 8) return;
-        touch.dragging = true;
-        suppressClick = true;
-        viewport.setPointerCapture(event.pointerId);
-      }
-      shift(touch.previousX - event.clientX);
-      touch.previousX = event.clientX;
-    });
-
-    for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"] as const) {
-      viewport.addEventListener(eventName, (event) => {
-        // Implicit capture can move from the touched image to the viewport.
-        if (eventName === "lostpointercapture" && event.target !== viewport) return;
-        if (touch?.id === event.pointerId) endTouch();
-      });
-    }
-
-    viewport.addEventListener("click", (event) => {
-      if (!suppressClick || event.detail === 0) return;
-      suppressClick = false;
-      event.preventDefault();
-    }, { capture: true });
-
     viewport.addEventListener(
       "wheel",
       (event) => {
