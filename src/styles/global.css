@@ -117,6 +117,9 @@ nav [aria-current="page"] {
   letter-spacing: -0.035em;
   white-space: nowrap;
 }
+.hero h1 a:hover {
+  text-decoration: none;
+}
 .hero-tagline {
   margin-top: 6px;
   font-size: clamp(15px, 2vw, 28px);
