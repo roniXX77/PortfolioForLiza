@@ -530,6 +530,8 @@ video {
     animation: none;
     will-change: auto;
   }
+}
+@media (prefers-reduced-motion: reduce) {
   .ribbon-group[aria-hidden="true"] {
     display: none;
   }

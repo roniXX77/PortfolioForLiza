@@ -46,6 +46,50 @@ const { items } = Astro.props;
     const track = ribbon.querySelector<HTMLElement>(".ribbon-track")!;
     const group = track.querySelector<HTMLElement>(".ribbon-group")!;
 
+    const nativeAutoplay = matchMedia(
+      "(hover: none) and (pointer: coarse) and (prefers-reduced-motion: no-preference)",
+    );
+    let touching = false;
+    let resumeAt = 0;
+    let automaticPosition = viewport.scrollLeft;
+    let fraction = 0;
+    let previousTime = 0;
+    let frame = 0;
+
+    function advance(time: number) {
+      const elapsed = Math.min(time - previousTime, 50);
+      previousTime = time;
+      if (!touching && time >= resumeAt && !ribbon.querySelector(":focus-visible")) {
+        const width = group.offsetWidth;
+        if (width) {
+          fraction += elapsed * width / 60_000;
+          const pixels = Math.floor(fraction);
+          fraction -= pixels;
+          viewport.scrollLeft = (viewport.scrollLeft + pixels) % width;
+          automaticPosition = viewport.scrollLeft;
+        }
+      }
+      frame = requestAnimationFrame(advance);
+    }
+
+    function syncAutoplay() {
+      cancelAnimationFrame(frame);
+      if (!nativeAutoplay.matches) return;
+      automaticPosition = viewport.scrollLeft;
+      previousTime = performance.now();
+      frame = requestAnimationFrame(advance);
+    }
+
+    viewport.addEventListener("touchstart", () => { touching = true; }, { passive: true });
+    function releaseTouch(event: TouchEvent) {
+      touching = event.touches.length > 0;
+      resumeAt = performance.now() + 450;
+    }
+    viewport.addEventListener("touchend", releaseTouch, { passive: true });
+    viewport.addEventListener("touchcancel", releaseTouch, { passive: true });
+    nativeAutoplay.addEventListener("change", syncAutoplay);
+    syncAutoplay();
+
     function shift(distance: number) {
       const animation = track.getAnimations()[0];
       const duration = animation?.effect?.getComputedTiming().duration;
@@ -83,6 +127,12 @@ const { items } = Astro.props;
     viewport.addEventListener(
       "scroll",
       () => {
+        if (nativeAutoplay.matches) {
+          if (viewport.scrollLeft !== automaticPosition) {
+            resumeAt = performance.now() + 450;
+          }
+          return;
+        }
         if (viewport.scrollLeft && shift(viewport.scrollLeft))
           viewport.scrollLeft = 0;
       },
