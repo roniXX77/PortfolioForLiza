@@ -66,4 +66,40 @@ const { entry, body } = Astro.props;
   a:focus-visible {
     text-decoration: underline;
   }
+  .essay-body:has(:global(.essay-with-image)) {
+    max-width: 1120px;
+  }
+
+  .essay-body :global(.essay-with-image) {
+    display: grid;
+    grid-template-columns: minmax(0, 720px) minmax(0, 320px);
+    gap: var(--gap);
+    align-items: start;
+  }
+
+  .essay-body :global(.essay-copy) {
+    grid-area: 1 / 1;
+  }
+
+  .essay-body :global(.essay-side-image) {
+    grid-area: 1 / 2;
+  }
+
+  .essay-body :global(.essay-side-image figcaption) {
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 700px) {
+    .essay-body :global(.essay-with-image) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .essay-body :global(.essay-side-image) {
+      grid-area: 1 / 1;
+      max-width: 320px;
+    }
+    .essay-body :global(.essay-copy) {
+      grid-area: 2 / 1;
+    }
+  }
 </style>
