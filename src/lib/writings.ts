@@ -72,19 +72,6 @@ export const selected: Writing[] = [
     },
   },
   {
-    id: "lynch",
-    title:
-      "Love Through the Image: David Lynch’s Inland Empire and Late Lithographs",
-    format: "Essay · film and visual art",
-    year: 2026,
-    preview:
-      "A reading of Lynch’s late esotericism through digital images, lithographs and the difficult forms in which love becomes visible.",
-    imageCredit: {
-      label: "Lyncharium",
-      url: "https://lyncharium.com/inland-empire/",
-    },
-  },
-  {
     id: "flowers",
     title: "The Greatest USPS Commercial: Jim Jarmusch’s Broken Flowers",
     format: "Essay · film criticism",
