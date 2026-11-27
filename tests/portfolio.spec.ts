@@ -141,7 +141,7 @@ test("responsive layouts have no page overflow", async ({ page }) => {
       "/projects/digital-archive/",
     ]),
   ];
-  expect(detailRoutes).toHaveLength(28);
+  expect(detailRoutes).toHaveLength(27);
   const routes = [
     "/",
     "/projects/",
